@@ -1,0 +1,26 @@
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Local configuration
+.env
+
+# Large models (automatic downloader handles this on startup)
+kokoro-en-v0_19/
+kokoro-en-v0_19.tar.bz2
+
+# Temp generated audio outputs
+static/output_*.wav
+temp_output.wav
+test_output.wav
+
+# IDE folders
+.vscode/
+.idea/

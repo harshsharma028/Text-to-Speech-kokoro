@@ -1,0 +1,7 @@
+sherpa-onnx
+soundfile
+fastapi
+uvicorn
+python-dotenv
+
+
