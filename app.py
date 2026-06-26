@@ -1,6 +1,7 @@
 import os
 import time
 import sys
+import logging
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
@@ -9,6 +10,13 @@ from pydantic import BaseModel
 import sherpa_onnx
 import soundfile as sf
 from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -19,13 +27,13 @@ NUM_THREADS = int(os.getenv("NUM_THREADS", "4"))
 # Automatic model download on first run
 MODEL_DIR = "kokoro-en-v0_19"
 if not os.path.exists(MODEL_DIR):
-    print("Model not found. Launching download script...")
+    logger.info("Model not found. Launching download script...")
     try:
         import download_model
         download_model.main()
     except Exception as e:
-        print(f"Failed to automatically download the model: {e}")
-        print("Please run 'python download_model.py' manually first.")
+        logger.error(f"Failed to automatically download the model: {e}")
+        logger.info("Please run 'python download_model.py' manually first.")
         sys.exit(1)
 
 # Initialize TTS engine
@@ -42,12 +50,12 @@ config = sherpa_onnx.OfflineTtsConfig(
     )
 )
 
-print("Loading Kokoro TTS engine...")
+logger.info("Loading Kokoro TTS engine...")
 try:
     tts = sherpa_onnx.OfflineTts(config)
-    print("TTS engine loaded successfully!")
+    logger.info("TTS engine loaded successfully!")
 except Exception as e:
-    print(f"Error loading TTS engine: {e}")
+    logger.error(f"Error loading TTS engine: {e}")
     sys.exit(1)
 
 # Speaker mapping dictionary
@@ -115,6 +123,7 @@ def generate_tts(req: TTSRequest):
     try:
         start_time = time.time()
         # Generate speech
+        logger.info(f"Generating TTS for text length: {len(req.text)} with speaker: {req.speaker}")
         audio = tts.generate(req.text, sid=sid, speed=req.speed)
         generation_time = time.time() - start_time
         
@@ -126,6 +135,7 @@ def generate_tts(req: TTSRequest):
         filename = f"output_{int(time.time() * 1000)}.wav"
         output_path = os.path.join("static", filename)
         sf.write(output_path, audio.samples, audio.sample_rate)
+        logger.info(f"Generated {filename} in {generation_time:.3f}s (RTF: {rtf:.3f})")
         
         return {
             "url": f"/static/{filename}",
@@ -135,6 +145,7 @@ def generate_tts(req: TTSRequest):
             "char_count": len(req.text)
         }
     except Exception as e:
+        logger.error(f"Error during TTS generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Fallback route to serve index.html directly

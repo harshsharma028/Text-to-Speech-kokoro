@@ -15,11 +15,13 @@ ENV/
 # Large models (automatic downloader handles this on startup)
 kokoro-en-v0_19/
 kokoro-en-v0_19.tar.bz2
+kokoro-multi-lang-v1_1/
 
 # Temp generated audio outputs
 static/output_*.wav
 temp_output.wav
 test_output.wav
+test_script.py
 
 # IDE folders
 .vscode/
